@@ -355,7 +355,7 @@ func (m *baseMeta) CleanStaleSessions() {
 			logger.Warnf("Get session info %d: %s", sid, err)
 			s = &Session{Sid: sid}
 		}
-		logger.Infof("clean up stale session %d %+v: %s", sid, s.SessionInfo, m.en.doCleanStaleSession(sid))
+		logger.Infof("clean up stale session %d %+v: %v", sid, s.SessionInfo, m.en.doCleanStaleSession(sid))
 	}
 }
 

@@ -9,6 +9,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.3.0
 	github.com/DataDog/zstd v1.5.0
 	github.com/IBM/ibm-cos-sdk-go v1.8.0
+	github.com/K265/aliyundrive-go v0.0.0-20211218103215-c3eba4e292d5
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-20191125093154-335c2b73bf6b
 	github.com/agiledragon/gomonkey/v2 v2.6.0
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.2+incompatible
