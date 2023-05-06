@@ -9,7 +9,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v0.3.0
 	github.com/DataDog/zstd v1.5.0
 	github.com/IBM/ibm-cos-sdk-go v1.8.0
-	github.com/K265/aliyundrive-go v0.0.0-20211218103215-c3eba4e292d5
+	github.com/K265/aliyundrive-go v0.0.0-20230415083138-38e340dd8c2e
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-20191125093154-335c2b73bf6b
 	github.com/agiledragon/gomonkey/v2 v2.6.0
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.2+incompatible
@@ -114,6 +114,7 @@ require (
 	github.com/djherbis/atime v1.0.0 // indirect
 	github.com/dswarbrick/smart v0.0.0-20190505152634-909a45200d6d // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0 // indirect
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect

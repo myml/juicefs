@@ -21,6 +21,8 @@ type AliyunStorage struct {
 	workdir     string
 	tempdirID   string
 	nodeIDCache sync.Map
+	getLock     chan struct{}
+	putLock     chan struct{}
 }
 
 func (s *AliyunStorage) getNode(path string, createDir bool) (string, error) {
@@ -29,7 +31,7 @@ func (s *AliyunStorage) getNode(path string, createDir bool) (string, error) {
 	}
 	node, err := s.fs.GetByPath(context.Background(), path, drive.AnyKind)
 	if err != nil {
-		if errors.Is(err, drive.ErrorNotFound) && createDir {
+		if errors.Is(err, os.ErrNotExist) && createDir {
 			nodeID, err := s.fs.CreateFolderRecursively(context.Background(), path)
 			if err != nil {
 				return "", err
@@ -48,8 +50,12 @@ func (s *AliyunStorage) path(key string) string {
 }
 
 func (s *AliyunStorage) Get(key string, offset int64, length int64) (io.ReadCloser, error) {
+	s.getLock <- struct{}{}
+	defer func() {
+		<-s.getLock
+	}()
 	path := s.path(key)
-	log.Println("Gut", path)
+	log.Println("Get", path)
 	nodeID, err := s.getNode(path, false)
 	if err != nil {
 		return nil, err
@@ -69,6 +75,11 @@ func (s *AliyunStorage) Get(key string, offset int64, length int64) (io.ReadClos
 }
 
 func (s *AliyunStorage) Put(key string, in io.Reader) error {
+	s.putLock <- struct{}{}
+	defer func() {
+		<-s.putLock
+	}()
+
 	path := s.path(key)
 	log.Println("Put", path)
 	dir, filename := filepath.Split(path)
@@ -99,7 +110,7 @@ func (s *AliyunStorage) delete(key string) error {
 	path := s.path(key)
 	nodeID, err := s.getNode(path, false)
 	if err != nil {
-		if errors.Is(err, drive.ErrorNotFound) {
+		if errors.Is(err, os.ErrNotExist) {
 			return nil
 		}
 		return err
@@ -107,23 +118,27 @@ func (s *AliyunStorage) delete(key string) error {
 	s.nodeIDCache.Delete(path)
 	return s.fs.Remove(context.Background(), nodeID)
 }
+
 func (s *AliyunStorage) Delete(key string) error {
 	log.Println("Delete", s.path(key))
 	return s.delete(key)
 }
+
 func (s *AliyunStorage) String() string {
 	return fmt.Sprintf("aliyun://%s/", s.workdir)
 }
 
-func newAliyun(endpoint, user, passwd string) (ObjectStorage, error) {
+func newAliyun(endpoint, accessKey, secretKey, token string) (ObjectStorage, error) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	token, err := os.ReadFile("refresh_token")
+
+	tokenData, err := os.ReadFile("refresh_token")
 	if err == nil {
-		passwd = string(token)
+		secretKey = string(tokenData)
 	}
 	config := &drive.Config{
-		RefreshToken: passwd,
+		RefreshToken: secretKey,
 		IsAlbum:      false,
+		DeviceId:     accessKey,
 		HttpClient:   &http.Client{},
 		OnRefreshToken: func(refreshToken string) {
 			os.WriteFile("refresh_token", []byte(refreshToken), 0600)
@@ -140,6 +155,8 @@ func newAliyun(endpoint, user, passwd string) (ObjectStorage, error) {
 		return nil, err
 	}
 	s.workdir = endpoint
+	s.getLock = make(chan struct{}, 2)
+	s.putLock = make(chan struct{}, 2)
 
 	// clean temp dir
 	tempDir := filepath.Join(s.workdir, ".temp")
